@@ -1,0 +1,342 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <title>Admin Page</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style type="text/css">
+    #loader {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 1;
+      width: 150px;
+      height: 150px;
+      margin: -75px 0 0 -75px;
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      border-top: 16px solid blue;
+      border-right: 16px solid green;
+      border-bottom: 16px solid red;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <div class="container">
+    <div class="jumbotron">
+      <h1>Analytics Admin Page</h1>      
+      <p>Manage users, groups, and subscriptions here</p>
+    </div>
+
+    <div class="alert alert-success" id='success-alert'>
+      <strong>Success!</strong> Action completed
+    </div>
+
+
+    <div id="loader"></div>
+
+    <!-- <button id='duplicate_group'> test </button> -->
+
+    <div class="panel-group">
+
+    </div>
+
+
+
+    <!-- Modal for add user -->
+    <div class="modal fade" id="add_user_modal" role="dialog">
+      <div class="modal-dialog">
+
+        <!--Add user Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Add Users</h4>
+          </div>
+          <div class="modal-body" id="add_user_modal_body">
+
+            <div class="checkbox">
+              <label><input type="checkbox" value=""></label>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal" value="add_users_confirm">Add Users</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Confirmation modal -->
+    <div class="modal fade" id="confirm_modal" role="dialog">
+      <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Confirmation</h4>
+          </div>
+          <div id='modal_text' class="modal-body">
+
+          </div>
+          <div class="modal-footer">
+           <button type="button" class="btn btn-primary" data-dismiss="modal" value="confirm">Confirm</button>
+           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+         </div>
+       </div>
+
+     </div>
+   </div>
+
+   <!-- rename modal -->
+   <div class="modal fade" id="rename_modal" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Rename Group</h4>
+        </div>
+        <div id='modal_text' class="modal-body">
+          <div class="form-group">
+            <label>New Name:</label>
+            <input type="text" class="form-control" id="rename_input">
+          </div>
+        </div>
+        <div class="modal-footer">
+         <button type="button" class="btn btn-primary" data-dismiss="modal" value="rename">Confirm</button>
+         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+       </div>
+     </div>
+
+   </div>
+ </div>
+
+</body>
+
+
+<script type="text/javascript">
+
+  $('#loader').hide();
+  $('#success-alert').hide();
+
+// iterate through all out groups and users and create collapsible list and buttons
+let groups_dict = '';
+$(document).ready(function(){
+  groups_dict = {{output_list|safe}};
+  console.log(groups_dict);
+      // console.log(JSON.stringify(groups_dict));
+      let group_counter = 0;
+      for (let entry of groups_dict){
+        // console.log(entry["name"]);
+        group_counter++;
+        // console.log(group_counter);
+
+        $(".panel-group").append(
+          $('<div/>', {'class' : 'panel panel-default'}).append(
+            $('<div/>', {'class' : 'panel-heading'}).append(
+              $('<a/>', {'style' : 'text-decoration: none', 'data-toggle' : 'collapse', 'href' : '#' + group_counter}).append(
+                $('<h4/>', {'class' : 'panel-title', 'text' : entry["name"]})
+                )
+              )
+            ).append($('<div/>', {'class' : 'panel-collapse collapse', 'id' : group_counter}).append($('<ul/>', {'class' : 'list-group', 'id' : 'list_group' + group_counter})
+              )));
+
+
+        for (let i of entry["members"]){
+            // console.log(i);
+
+            $("#" + 'list_group' + group_counter).append(
+              $('<li/>', {'class' : 'list-group-item'}).append(
+                $('<button/>', {'class' : 'glyphicon glyphicon-trash', 'data-group_luid' : entry["luid"],'data-user_luid' : i["luid"], 'id' : 'delete'})
+                ).append(" " + i["name"]));
+
+          }
+          $("#" + 'list_group' + group_counter).append($('<button/>', {'class' : 'btn btn-info btn-md', 'id' : 'add_users', 'data-id' : entry["luid"], 'data-name' : entry["name"], 'text' : '(+) add users'})).append('\n');
+
+          $("#" + 'list_group' + group_counter).append($('<button/>', {'class' : 'btn btn-info btn-md', 'id' : 'rename_group', 'data-id' : entry["luid"], 'data-name' : entry["name"], 'text' : 'rename group'})).append('\n');
+
+          $("#" + 'list_group' + group_counter).append($('<button/>', {'class' : 'btn btn-info btn-md', 'id' : 'duplicate_group', 'data-id' : entry["luid"], 'data-name' : entry["name"], 'text' : 'duplicate group'})).append('\n');
+
+          $("#" + 'list_group' + group_counter).append($('<button/>', {'class' : 'btn btn-info btn-md', 'id' : 'delete_group', 'data-id' : entry["luid"], 'data-name' : entry["name"], 'text' : '(-) delete group'}));
+
+        }
+
+
+// we'll add the user list for the add user modal here
+for (let entry of groups_dict){
+  if (entry["name"] === "All Users") {
+    for (let user of entry["members"]) {
+      $('#add_user_modal_body').append($('<div/>', {'class' : 'checkbox'}).append($('<label/>').append($('<input/>', {'type' : 'checkbox', 'name' : 'user_selector','value' : user["luid"]})).append(user["name"])));
+    }};
+  };
+
+
+});
+
+let group_id = '';
+let group_name = '';
+let user_id = '';
+$(document).on("click", "button[class='glyphicon glyphicon-trash']",function(){
+  $("#modal_text").text("Are you sure you want to delete user from group?");
+  console.log($(this).attr('value')); 
+  user_id = $(this).attr('data-user_luid');
+  group_id = $(this).attr('data-group_luid');
+  $("#confirm_modal").modal('show');
+});
+
+
+  // gonna go back to this
+  $(document).on("click", "button[id*='add_users']",function(){
+    group_id = $(this).attr('data-id');
+    group_name = $(this).attr('data-name');
+    // we need to get a list of users who are not in this group
+    // console.log(JSON.stringify(groups_dict));
+
+    $("#add_user_modal").modal('show');
+  });
+
+  $(document).on("click", "button[value*='add_users_confirm']",function(){
+    // console.log($("input[name='user_selector']").prop('checked'));
+    let luid_list = [];
+    $('#add_user_modal_body input:checked').each(function() {
+      luid_list.push(this.value);
+    });
+    console.log('hello');
+    console.log(luid_list);
+    console.log(group_id);
+    // data_test = JSON.stringify({'luid_list' : luid_list, 'group_id' : group_id});
+    data_test = {'luid_list' : JSON.stringify(luid_list), 'group_id' : group_id};
+    console.log(data_test);
+    // jQuery.ajaxSettings.traditional = true;
+    // $.post('add_users', data_test);
+    $.ajax(
+      {url: 'add_users', type: 'POST', data : data_test, async : true, success : function(){
+        $('#loader').show();
+        setTimeout(function(){location.reload();},3000); 
+        setTimeout(function(){
+          $('#loader').hide();
+          $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+            $("#success-alert").slideUp(500);
+          });
+        }
+        ,2000); 
+      }});
+  });
+
+  $(document).on("click", "button[id*='rename_group']",function(){
+   group_id = $(this).attr('data-id');
+   group_name = $(this).attr('data-name');
+   $("#rename_modal").modal('show');
+ });
+
+  $(document).on("click", "button[id*='delete_group']",function(){
+    group_id = $(this).attr('data-id');
+    group_name = $(this).attr('data-name');
+    $("#modal_text").text("Are you sure you want to delete?"); 
+    $("#confirm_modal").modal('show');
+  });
+
+  $(document).on("click", "button[id*='duplicate_group']",function(){
+    group_id = $(this).attr('data-id');
+    group_name = $(this).attr('data-name');
+    $("#modal_text").text("Are you sure you want to duplicate?"); 
+    $("#confirm_modal").modal('show');
+  });
+
+
+  $(document).on("click", "button[value='confirm']", function(){
+    console.log('whats going on');
+    console.log($("#modal_text").text());
+    if ($("#modal_text").text() === 'Are you sure you want to delete?'){
+    // $.post('delete_group', {'luid' : group_id, 'name' : group_name});
+    $.ajax({url: 'delete_group', type: 'POST', data : {'luid' : group_id, 
+      'name' : group_name}, async : true, success : function(){
+        $('#loader').show();
+        setTimeout(function(){location.reload();},3000); 
+        setTimeout(function(){
+          $('#loader').hide();
+          $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+            $("#success-alert").slideUp(500);
+          });
+        }
+        ,2000); 
+      }});
+  } else if ($("#modal_text").text() === 'Are you sure you want to duplicate?'){
+    // $.post('duplicate_group', {'luid' : group_id, 'name' : group_name}, function(){location.reload();});
+    $.ajax({url: 'duplicate_group', type: 'POST', data : {'luid' : group_id, 
+      'name' : group_name}, async : true, success : function(){
+        $('#loader').show();
+        setTimeout(function(){location.reload();},3000); 
+        setTimeout(function(){
+          $('#loader').hide();
+          $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+            $("#success-alert").slideUp(500);
+          });
+        }
+        ,2000); 
+      }});
+  } else if ($("#modal_text").text() === 'Are you sure you want to delete user from group?'){
+    // $.post('delete_user', {'user_luid' : user_id, 'group_luid' : group_id});
+    $.ajax({url: 'delete_user', type: 'POST', data : {'user_luid' : user_id, 'group_luid' : group_id}, async : true, success : function(){
+        $('#loader').show();
+        setTimeout(function(){location.reload();},3000); 
+        setTimeout(function(){
+          $('#loader').hide();
+          $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+            $("#success-alert").slideUp(500);
+          });
+        }
+        ,2000); 
+      }});
+  };
+
+
+});
+
+  $(document).on("click", "button[value='rename']", function(){
+    console.log('whats going on');
+    console.log($("#modal_text").text());
+    let new_name = $('#rename_input').val();
+  // $.post('rename_group', {'luid' : group_id, 'name' : group_name, 'new_name' : new_name});
+  $.ajax({url: 'rename_group', type: 'POST', data : {'luid' : group_id, 'name' : group_name, 'new_name' : new_name}, async : true, success : function(){
+        $('#loader').show();
+        setTimeout(function(){location.reload();},3000); 
+        setTimeout(function(){
+          $('#loader').hide();
+          $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+            $("#success-alert").slideUp(500);
+          });
+        }
+        ,2000); 
+      }});
+
+  console.log(new_name);
+});
+
+
+</script>
+
+</html>
