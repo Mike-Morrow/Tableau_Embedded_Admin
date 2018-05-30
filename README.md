@@ -1,5 +1,5 @@
 # Tableau_Embedded_Admin
-===
+
 A single page web application for performing common admin tasks on Tableau Server. Designed for the embedded use case.
 
 The backend uses Flask and leverages Tableau's REST API (via Tableau-Tools) to modify resources on the Tableau Server. The backend is designed to be as minimal as possible, simply passing requests to the Tableau Server and returning JSON objects to the browser that are then parsed into an interactive collapsible list.  
