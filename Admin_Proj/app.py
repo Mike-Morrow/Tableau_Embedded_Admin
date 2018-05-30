@@ -15,8 +15,8 @@ import csv
 
 #version of page that is read only and version that shows command options
 
-username = 'admin'
-password = 'admin'
+username = 'your_username'
+password = 'your_password'
 server = 'http://localhost'
 site_content_url = 'Default'
 
